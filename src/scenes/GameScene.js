@@ -13,8 +13,28 @@ class GameScene extends Phaser.Scene {
         this.workerManager = new WorkerManager(this);
         this.uiManager = new UIManager(this);
 
+        // Setup camera
+        const worldWidth = CONSTANTS.GRID_SIZE * CONSTANTS.CELL_SIZE;
+        const worldHeight = CONSTANTS.GRID_SIZE * CONSTANTS.CELL_SIZE;
+        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+
+        // Setup keyboard controls (WASD)
+        this.cursors = this.input.keyboard.addKeys({
+            w: Phaser.Input.Keyboard.KeyCodes.W,
+            a: Phaser.Input.Keyboard.KeyCodes.A,
+            s: Phaser.Input.Keyboard.KeyCodes.S,
+            d: Phaser.Input.Keyboard.KeyCodes.D
+        });
+
         // Setup initial buildings and workers
         this.setupInitialState();
+
+        // Center camera on castle
+        const castle = this.buildingManager.getCastle();
+        if (castle) {
+            const castleCenter = castle.getCenter();
+            this.cameras.main.centerOn(castleCenter.x, castleCenter.y);
+        }
     }
 
     setGameSpeed(speed) {
@@ -52,6 +72,22 @@ class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        // Camera movement (WASD)
+        const cameraSpeed = CONSTANTS.CAMERA_SPEED * (delta / 1000);
+
+        if (this.cursors.w.isDown) {
+            this.cameras.main.scrollY -= cameraSpeed;
+        }
+        if (this.cursors.s.isDown) {
+            this.cameras.main.scrollY += cameraSpeed;
+        }
+        if (this.cursors.a.isDown) {
+            this.cameras.main.scrollX -= cameraSpeed;
+        }
+        if (this.cursors.d.isDown) {
+            this.cameras.main.scrollX += cameraSpeed;
+        }
+
         // Apply game speed multiplier
         const adjustedDelta = delta * this.gameSpeed;
 

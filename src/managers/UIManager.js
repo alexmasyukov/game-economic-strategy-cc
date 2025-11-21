@@ -12,16 +12,42 @@ class UIManager {
         this.scene.resourceManager.onResourceChange(() => {
             this.updateResourceDisplay();
         });
+
+        // Handle resize
+        this.scene.scale.on('resize', this.handleResize, this);
+    }
+
+    handleResize(gameSize) {
+        // Recreate UI elements on resize
+        this.destroyUI();
+        this.createTopBar();
+        this.createBottomBar();
+        this.createSpeedControls();
+        this.updateResourceDisplay();
+        this.updateSpeedButtons();
+    }
+
+    destroyUI() {
+        if (this.topBarBg) this.topBarBg.destroy();
+        if (this.resourceText) this.resourceText.destroy();
+        if (this.bottomBarBg) this.bottomBarBg.destroy();
+
+        this.speedButtons.forEach(btn => {
+            if (btn.buttonBg) btn.buttonBg.destroy();
+            if (btn.text) btn.text.destroy();
+        });
+        this.speedButtons = [];
     }
 
     createTopBar() {
-        const width = this.scene.game.config.width;
+        const width = this.scene.scale.width;
 
         // Background
         this.topBarBg = this.scene.add.graphics();
         this.topBarBg.fillStyle(CONSTANTS.COLORS.UI_BG, 1);
         this.topBarBg.fillRect(0, 0, width, 40);
         this.topBarBg.setDepth(1000);
+        this.topBarBg.setScrollFactor(0);
 
         // Resource text
         this.resourceText = this.scene.add.text(10, 10, '', {
@@ -30,19 +56,21 @@ class UIManager {
             fontFamily: 'Arial'
         });
         this.resourceText.setDepth(1001);
+        this.resourceText.setScrollFactor(0);
 
         this.updateResourceDisplay();
     }
 
     createBottomBar() {
-        const width = this.scene.game.config.width;
-        const height = this.scene.game.config.height;
+        const width = this.scene.scale.width;
+        const height = this.scene.scale.height;
 
         // Background
         this.bottomBarBg = this.scene.add.graphics();
         this.bottomBarBg.fillStyle(CONSTANTS.COLORS.UI_BG, 1);
         this.bottomBarBg.fillRect(0, height - 60, width, 60);
         this.bottomBarBg.setDepth(1000);
+        this.bottomBarBg.setScrollFactor(0);
 
         // Build buttons
         this.createBuildButton(10, height - 50, 'Теплица', CONSTANTS.BUILDING_TYPES.GREENHOUSE);
@@ -53,6 +81,7 @@ class UIManager {
         button.fillStyle(CONSTANTS.COLORS.BUTTON_NORMAL, 1);
         button.fillRect(x, y, 100, 40);
         button.setDepth(1001);
+        button.setScrollFactor(0);
         button.setInteractive(
             new Phaser.Geom.Rectangle(x, y, 100, 40),
             Phaser.Geom.Rectangle.Contains
@@ -65,6 +94,7 @@ class UIManager {
         });
         text.setOrigin(0.5);
         text.setDepth(1002);
+        text.setScrollFactor(0);
 
         button.on('pointerdown', () => {
             this.onBuildButtonClick(buildingType);
@@ -84,7 +114,7 @@ class UIManager {
     }
 
     createSpeedControls() {
-        const width = this.scene.game.config.width;
+        const width = this.scene.scale.width;
         const startX = width - 250;
         const y = 5;
 
@@ -106,6 +136,7 @@ class UIManager {
         buttonBg.fillStyle(CONSTANTS.COLORS.BUTTON_NORMAL, 1);
         buttonBg.fillRect(x, y, 40, 30);
         buttonBg.setDepth(1001);
+        buttonBg.setScrollFactor(0);
         buttonBg.setInteractive(
             new Phaser.Geom.Rectangle(x, y, 40, 30),
             Phaser.Geom.Rectangle.Contains
@@ -118,6 +149,7 @@ class UIManager {
         });
         text.setOrigin(0.5);
         text.setDepth(1002);
+        text.setScrollFactor(0);
 
         buttonBg.on('pointerdown', () => {
             this.setGameSpeed(speed);

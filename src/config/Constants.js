@@ -1,7 +1,12 @@
 const CONSTANTS = {
     // Grid settings
-    GRID_SIZE: 40,
+    GRID_SIZE: 200,
     CELL_SIZE: 25,
+
+    // Camera settings
+    CAMERA_WIDTH: 1000,
+    CAMERA_HEIGHT: 800,
+    CAMERA_SPEED: 300,
 
     // Game settings
     INITIAL_WORKERS: 5,
