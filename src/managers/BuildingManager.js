@@ -52,6 +52,9 @@ class BuildingManager {
         // Auto-assign a free worker
         this.scene.workerManager.assignWorkerToBuilding(greenhouse);
 
+        // Update UI worker count
+        this.scene.uiManager.updateWorkerCount();
+
         return greenhouse;
     }
 

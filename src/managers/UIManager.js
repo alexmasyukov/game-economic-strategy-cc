@@ -24,12 +24,14 @@ class UIManager {
         this.createBottomBar();
         this.createSpeedControls();
         this.updateResourceDisplay();
+        this.updateWorkerCount();
         this.updateSpeedButtons();
     }
 
     destroyUI() {
         if (this.topBarBg) this.topBarBg.destroy();
         if (this.resourceText) this.resourceText.destroy();
+        if (this.workerCountText) this.workerCountText.destroy();
         if (this.bottomBarBg) this.bottomBarBg.destroy();
 
         this.speedButtons.forEach(btn => {
@@ -49,7 +51,7 @@ class UIManager {
         this.topBarBg.setDepth(1000);
         this.topBarBg.setScrollFactor(0);
 
-        // Resource text
+        // Resource text (left side)
         this.resourceText = this.scene.add.text(10, 10, '', {
             fontSize: '16px',
             color: '#ffffff',
@@ -58,7 +60,18 @@ class UIManager {
         this.resourceText.setDepth(1001);
         this.resourceText.setScrollFactor(0);
 
+        // Worker count text (middle)
+        this.workerCountText = this.scene.add.text(width / 2, 10, '', {
+            fontSize: '16px',
+            color: '#ffffff',
+            fontFamily: 'Arial'
+        });
+        this.workerCountText.setOrigin(0.5, 0);
+        this.workerCountText.setDepth(1001);
+        this.workerCountText.setScrollFactor(0);
+
         this.updateResourceDisplay();
+        this.updateWorkerCount();
     }
 
     createBottomBar() {
@@ -204,8 +217,18 @@ class UIManager {
         this.resourceText.setText(text);
     }
 
+    updateWorkerCount() {
+        const freeWorkers = this.scene.workerManager.getFreeWorkersCount();
+        const totalWorkers = this.scene.workerManager.getWorkers().length;
+
+        this.workerCountText.setText(`Рабочие: ${freeWorkers}/${totalWorkers} свободно`);
+    }
+
     onBuildButtonClick(buildingType) {
         // Start placement mode instead of auto-placing
         this.scene.placementManager.startPlacement(buildingType);
+
+        // Update worker count after building placement
+        this.updateWorkerCount();
     }
 }
