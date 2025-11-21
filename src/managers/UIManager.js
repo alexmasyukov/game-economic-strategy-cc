@@ -205,40 +205,7 @@ class UIManager {
     }
 
     onBuildButtonClick(buildingType) {
-        if (buildingType === CONSTANTS.BUILDING_TYPES.GREENHOUSE) {
-            // Find a free spot near the castle
-            const castle = this.scene.buildingManager.getCastle();
-            if (castle) {
-                const freeSpot = this.findFreeBuildingSpot(
-                    castle.gridX,
-                    castle.gridY,
-                    CONSTANTS.BUILDINGS.GREENHOUSE.width,
-                    CONSTANTS.BUILDINGS.GREENHOUSE.height
-                );
-
-                if (freeSpot) {
-                    this.scene.buildingManager.createGreenhouse(freeSpot.x, freeSpot.y);
-                } else {
-                    console.log('Нет свободного места для строительства');
-                }
-            }
-        }
-    }
-
-    findFreeBuildingSpot(centerX, centerY, width, height) {
-        const searchRadius = 20;
-
-        for (let radius = 5; radius < searchRadius; radius++) {
-            for (let angle = 0; angle < Math.PI * 2; angle += 0.5) {
-                const testX = Math.floor(centerX + Math.cos(angle) * radius);
-                const testY = Math.floor(centerY + Math.sin(angle) * radius);
-
-                if (this.scene.gridManager.isAreaFree(testX, testY, width, height)) {
-                    return { x: testX, y: testY };
-                }
-            }
-        }
-
-        return null;
+        // Start placement mode instead of auto-placing
+        this.scene.placementManager.startPlacement(buildingType);
     }
 }

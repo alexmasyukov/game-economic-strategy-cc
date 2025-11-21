@@ -11,6 +11,7 @@ class GameScene extends Phaser.Scene {
         this.resourceManager = new ResourceManager();
         this.buildingManager = new BuildingManager(this);
         this.workerManager = new WorkerManager(this);
+        this.placementManager = new PlacementManager(this);
         this.uiManager = new UIManager(this);
 
         // Setup camera
