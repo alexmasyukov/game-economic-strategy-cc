@@ -58,6 +58,19 @@ class BuildingManager {
         return greenhouse;
     }
 
+    createGardenBed(gridX, gridY) {
+        const gardenBed = new GardenBed(this.scene, gridX, gridY);
+        this.addBuilding(gardenBed);
+
+        // Auto-assign a free worker
+        this.scene.workerManager.assignWorkerToBuilding(gardenBed);
+
+        // Update UI worker count
+        this.scene.uiManager.updateWorkerCount();
+
+        return gardenBed;
+    }
+
     update(deltaTime) {
         this.buildings.forEach(building => {
             if (building.update) {

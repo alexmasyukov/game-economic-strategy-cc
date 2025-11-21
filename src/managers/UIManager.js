@@ -87,6 +87,7 @@ class UIManager {
 
         // Build buttons
         this.createBuildButton(10, height - 50, 'Теплица', CONSTANTS.BUILDING_TYPES.GREENHOUSE);
+        this.createBuildButton(120, height - 50, 'Грядка', CONSTANTS.BUILDING_TYPES.GARDEN_BED);
     }
 
     createBuildButton(x, y, label, buildingType) {

@@ -24,12 +24,14 @@ const CONSTANTS = {
         CASTLE: 'CASTLE',
         STORAGE: 'STORAGE',
         CAMPFIRE: 'CAMPFIRE',
-        GREENHOUSE: 'GREENHOUSE'
+        GREENHOUSE: 'GREENHOUSE',
+        GARDEN_BED: 'GARDEN_BED'
     },
 
     // Resource types
     RESOURCE_TYPES: {
-        TOMATO: 'TOMATO'
+        TOMATO: 'TOMATO',
+        CARROT: 'CARROT'
     },
 
     // Building configs
@@ -59,6 +61,14 @@ const CONSTANTS = {
             name: 'Теплица',
             productionTime: 2000, // 2 seconds
             resourceType: 'TOMATO'
+        },
+        GARDEN_BED: {
+            width: 2,
+            height: 1,
+            color: 0xFFA500,
+            name: 'Грядка',
+            productionTime: 5000, // 5 seconds
+            resourceType: 'CARROT'
         }
     },
 

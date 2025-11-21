@@ -74,6 +74,9 @@ class PlacementManager {
             case CONSTANTS.BUILDING_TYPES.GREENHOUSE:
                 this.scene.buildingManager.createGreenhouse(gridPos.x, gridPos.y);
                 break;
+            case CONSTANTS.BUILDING_TYPES.GARDEN_BED:
+                this.scene.buildingManager.createGardenBed(gridPos.x, gridPos.y);
+                break;
             // Add other building types here
         }
 
