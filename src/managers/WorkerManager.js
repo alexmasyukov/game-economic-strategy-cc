@@ -1,4 +1,4 @@
-class WorkerManager {
+export class WorkerManager {
     constructor(scene) {
         this.scene = scene;
         this.workers = [];

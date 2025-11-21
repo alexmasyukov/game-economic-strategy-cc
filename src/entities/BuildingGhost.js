@@ -1,4 +1,5 @@
-class BuildingGhost {
+import { CONSTANTS } from '../config/Constants.js';
+export class BuildingGhost {
     constructor(scene, buildingType) {
         this.scene = scene;
         this.buildingType = buildingType;

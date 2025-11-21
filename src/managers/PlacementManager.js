@@ -1,4 +1,5 @@
-class PlacementManager {
+import { CONSTANTS } from '../config/Constants.js';
+export class PlacementManager {
     constructor(scene) {
         this.scene = scene;
         this.isPlacing = false;

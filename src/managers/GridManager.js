@@ -1,4 +1,5 @@
-class GridManager {
+import { CONSTANTS } from '../config/Constants.js';
+export class GridManager {
     constructor(scene) {
         this.scene = scene;
         this.gridSize = CONSTANTS.GRID_SIZE;

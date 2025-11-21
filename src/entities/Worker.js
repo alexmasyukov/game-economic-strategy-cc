@@ -1,4 +1,5 @@
-class Worker {
+import { CONSTANTS } from '../config/Constants.js';
+export class Worker {
     constructor(scene, x, y) {
         this.scene = scene;
         this.x = x;

@@ -1,8 +1,10 @@
+import { CONSTANTS } from '../config/Constants.js';
+
 /**
  * Building - базовый класс для всех зданий
  * Содержит общие свойства и логику, которая есть у каждого здания
  */
-class Building {
+export class Building {
     constructor(scene, gridX, gridY, config) {
         this.scene = scene;
         this.gridX = gridX;

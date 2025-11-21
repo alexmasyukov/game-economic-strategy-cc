@@ -1,3 +1,5 @@
+import { Building } from './Building.js';
+
 /**
  * ProductionBuilding - базовый класс для производственных зданий
  * Расширяет Building, добавляя логику производства ресурсов
@@ -5,7 +7,7 @@
  * Наследует базовые свойства (размер, цвет) из Building
  * Добавляет специфичные свойства для производственных зданий
  */
-class ProductionBuilding extends Building {
+export class ProductionBuilding extends Building {
     constructor(scene, gridX, gridY, config) {
         // Инициализация базовых свойств (размер, цвет) через родительский класс
         super(scene, gridX, gridY, config);

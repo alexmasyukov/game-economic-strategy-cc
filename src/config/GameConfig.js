@@ -1,4 +1,6 @@
-const gameConfig = {
+import { CONSTANTS } from './Constants.js';
+
+export const gameConfig = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,

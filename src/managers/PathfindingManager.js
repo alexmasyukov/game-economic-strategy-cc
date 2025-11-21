@@ -1,4 +1,4 @@
-class PathfindingManager {
+export class PathfindingManager {
     constructor(gridManager) {
         this.gridManager = gridManager;
         this.easystar = new EasyStar.js();

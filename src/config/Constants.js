@@ -1,4 +1,4 @@
-const CONSTANTS = {
+export const CONSTANTS = {
     // Grid settings
     GRID_SIZE: 200,
     CELL_SIZE: 25,

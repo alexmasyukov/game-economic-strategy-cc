@@ -1,4 +1,7 @@
-class GardenBed extends ProductionBuilding {
+import { ProductionBuilding } from '../ProductionBuilding.js';
+import { CONSTANTS } from '../../config/Constants.js';
+
+export class GardenBed extends ProductionBuilding {
     constructor(scene, gridX, gridY) {
         const config = {
             ...CONSTANTS.BUILDINGS.GARDEN_BED,

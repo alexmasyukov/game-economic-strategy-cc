@@ -1,4 +1,5 @@
-class BuildingManager {
+import { CONSTANTS } from '../config/Constants.js';
+export class BuildingManager {
     constructor(scene) {
         this.scene = scene;
         this.buildings = [];

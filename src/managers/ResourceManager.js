@@ -1,4 +1,5 @@
-class ResourceManager {
+import { CONSTANTS } from '../config/Constants.js';
+export class ResourceManager {
     constructor() {
         this.resources = {};
 

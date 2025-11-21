@@ -1,4 +1,5 @@
-class UIManager {
+import { CONSTANTS } from '../config/Constants.js';
+export class UIManager {
     constructor(scene) {
         this.scene = scene;
         this.gameSpeed = 1;

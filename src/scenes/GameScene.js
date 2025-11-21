@@ -1,4 +1,5 @@
-class GameScene extends Phaser.Scene {
+import { CONSTANTS } from '../config/Constants.js';
+export class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
         this.gameSpeed = 1;

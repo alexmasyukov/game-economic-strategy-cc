@@ -1,4 +1,6 @@
-class Storage extends Building {
+import { Building } from '../Building.js';
+import { CONSTANTS } from '../../config/Constants.js';
+export class Storage extends Building {
     constructor(scene, gridX, gridY) {
         const config = {
             ...CONSTANTS.BUILDINGS.STORAGE,
