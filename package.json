@@ -4,12 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "python3 -m http.server 8000",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite"
   },
   "private": true,
   "dependencies": {
     "easystarjs": "^0.4.4",
     "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^7.2.4"
   }
 }
