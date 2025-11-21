@@ -9,7 +9,7 @@ export const CONSTANTS = {
     CAMERA_SPEED: 300,
 
     // Game settings
-    INITIAL_WORKERS: 5,
+    INITIAL_WORKERS: 15,
 
     // Worker states
     WORKER_STATES: {
