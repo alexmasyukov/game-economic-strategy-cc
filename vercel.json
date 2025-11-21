@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "npm install",
+  "outputDirectory": ".",
+  "devCommand": "npm start",
+  "installCommand": "npm install",
+  "framework": null,
+  "public": true
+}
