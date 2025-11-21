@@ -9,10 +9,12 @@ class Campfire extends Building {
         // Переопределяем графику - рисуем круг вместо прямоугольника
         this.graphics.clear();
 
-        const center = this.getCenter();
+        // Рисуем круг в локальных координатах графики (центр клетки)
+        const localCenterX = CONSTANTS.CELL_SIZE / 2;
+        const localCenterY = CONSTANTS.CELL_SIZE / 2;
         const radius = (CONSTANTS.CELL_SIZE / 2) * 0.8; // Радиус чуть меньше половины клетки
 
         this.graphics.fillStyle(this.color, 1);
-        this.graphics.fillCircle(center.x, center.y, radius);
+        this.graphics.fillCircle(localCenterX, localCenterY, radius);
     }
 }
