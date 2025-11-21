@@ -82,6 +82,11 @@ class Worker {
                 this.moveToStorage();
                 break;
 
+            case CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE:
+                // Стоит и ждет освобождения места на складе
+                this.currentPath = null;
+                break;
+
             case CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING:
                 this.moveToBuilding();
                 break;
@@ -142,6 +147,19 @@ class Worker {
             case CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING:
                 this.followPath(deltaTime);
                 break;
+
+            case CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE:
+                // Периодически проверяем, появилось ли место на складе
+                const storage = this.scene.buildingManager.getStorage();
+                if (storage && storage.hasSpace()) {
+                    // Место появилось! Доставляем ресурс
+                    const success = storage.receiveResource(this.carryingResource);
+                    if (success) {
+                        this.carryingResource = null;
+                        this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
+                    }
+                }
+                break;
         }
 
         this.updateGraphics();
@@ -184,12 +202,19 @@ class Worker {
             // Arrived at storage
             const storage = this.scene.buildingManager.getStorage();
             if (storage && this.carryingResource) {
-                storage.receiveResource(this.carryingResource);
-                this.carryingResource = null;
+                // Проверяем, есть ли место на складе
+                if (storage.hasSpace()) {
+                    // Есть место - доставляем
+                    const success = storage.receiveResource(this.carryingResource);
+                    if (success) {
+                        this.carryingResource = null;
+                        this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
+                    }
+                } else {
+                    // Склад полон - ждем
+                    this.changeState(CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE);
+                }
             }
-
-            // Return to building
-            this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
 
         } else if (this.state === CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING) {
             // Arrived at building, start producing
