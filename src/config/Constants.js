@@ -19,7 +19,7 @@ const CONSTANTS = {
         RETURNING_TO_BUILDING: 'RETURNING_TO_BUILDING'
     },
 
-    // Building types
+    // Building types (технические ID)
     BUILDING_TYPES: {
         CASTLE: 'CASTLE',
         STORAGE: 'STORAGE',
@@ -28,10 +28,37 @@ const CONSTANTS = {
         GARDEN_BED: 'GARDEN_BED'
     },
 
-    // Resource types
+    // Resource types (технические ID)
     RESOURCE_TYPES: {
         TOMATO: 'TOMATO',
         CARROT: 'CARROT'
+    },
+
+    // UI Configuration - названия и эмодзи для отображения
+    UI_CONFIG: {
+        // Названия и иконки ресурсов для верхней панели
+        RESOURCES: {
+            TOMATO: {
+                name: 'Помидоры',
+                icon: '🍅'
+            },
+            CARROT: {
+                name: 'Морковь',
+                icon: '🥕'
+            }
+        },
+
+        // Названия и иконки зданий для кнопок строительства
+        BUILDINGS: {
+            GREENHOUSE: {
+                name: 'Теплица',
+                icon: '🏡'
+            },
+            GARDEN_BED: {
+                name: 'Грядка',
+                icon: '🌱'
+            }
+        }
     },
 
     // Building configs
@@ -51,13 +78,13 @@ const CONSTANTS = {
         CAMPFIRE: {
             width: 1,
             height: 1,
-            color: 0xFF4500,
+            color: 0xFF0000, // Красный цвет огня
             name: 'Очаг'
         },
         GREENHOUSE: {
             width: 3,
             height: 1,
-            color: 0x228B22,
+            color: 0xFF6347, // Tomato color
             name: 'Теплица',
             productionTime: 2000, // 2 seconds
             resourceType: 'TOMATO'

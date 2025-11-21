@@ -85,23 +85,39 @@ class UIManager {
         this.bottomBarBg.setDepth(1000);
         this.bottomBarBg.setScrollFactor(0);
 
-        // Build buttons
-        this.createBuildButton(10, height - 50, 'Теплица', CONSTANTS.BUILDING_TYPES.GREENHOUSE);
-        this.createBuildButton(120, height - 50, 'Грядка', CONSTANTS.BUILDING_TYPES.GARDEN_BED);
+        // Build buttons - используем конфигурацию из UI_CONFIG
+        const greenhouseConfig = CONSTANTS.UI_CONFIG.BUILDINGS.GREENHOUSE;
+        const gardenBedConfig = CONSTANTS.UI_CONFIG.BUILDINGS.GARDEN_BED;
+
+        this.createBuildButton(
+            10,
+            height - 50,
+            `${greenhouseConfig.icon} ${greenhouseConfig.name}`,
+            CONSTANTS.BUILDING_TYPES.GREENHOUSE
+        );
+        this.createBuildButton(
+            140,
+            height - 50,
+            `${gardenBedConfig.icon} ${gardenBedConfig.name}`,
+            CONSTANTS.BUILDING_TYPES.GARDEN_BED
+        );
     }
 
     createBuildButton(x, y, label, buildingType) {
+        // Вычисляем ширину кнопки в зависимости от текста (минимум 100, максимум 130)
+        const buttonWidth = Math.min(130, Math.max(100, label.length * 8 + 20));
+
         const button = this.scene.add.graphics();
         button.fillStyle(CONSTANTS.COLORS.BUTTON_NORMAL, 1);
-        button.fillRect(x, y, 100, 40);
+        button.fillRect(x, y, buttonWidth, 40);
         button.setDepth(1001);
         button.setScrollFactor(0);
         button.setInteractive(
-            new Phaser.Geom.Rectangle(x, y, 100, 40),
+            new Phaser.Geom.Rectangle(x, y, buttonWidth, 40),
             Phaser.Geom.Rectangle.Contains
         );
 
-        const text = this.scene.add.text(x + 50, y + 20, label, {
+        const text = this.scene.add.text(x + buttonWidth / 2, y + 20, label, {
             fontSize: '14px',
             color: '#ffffff',
             fontFamily: 'Arial'
@@ -117,13 +133,13 @@ class UIManager {
         button.on('pointerover', () => {
             button.clear();
             button.fillStyle(CONSTANTS.COLORS.BUTTON_HOVER, 1);
-            button.fillRect(x, y, 100, 40);
+            button.fillRect(x, y, buttonWidth, 40);
         });
 
         button.on('pointerout', () => {
             button.clear();
             button.fillStyle(CONSTANTS.COLORS.BUTTON_NORMAL, 1);
-            button.fillRect(x, y, 100, 40);
+            button.fillRect(x, y, buttonWidth, 40);
         });
     }
 
@@ -208,11 +224,18 @@ class UIManager {
 
     updateResourceDisplay() {
         const resources = this.scene.resourceManager.getAllResources();
-        let text = 'Ресурсы: ';
+        let text = '';
 
-        Object.keys(resources).forEach((key, index) => {
-            if (index > 0) text += ', ';
-            text += `${key}: ${resources[key]}`;
+        Object.keys(resources).forEach((resourceType, index) => {
+            if (index > 0) text += '  ';
+
+            const uiConfig = CONSTANTS.UI_CONFIG.RESOURCES[resourceType];
+            if (uiConfig) {
+                text += `${uiConfig.icon} ${resources[resourceType]}`;
+            } else {
+                // Fallback если конфига нет
+                text += `${resourceType}: ${resources[resourceType]}`;
+            }
         });
 
         this.resourceText.setText(text);
