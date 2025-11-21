@@ -24,10 +24,12 @@ Village Builder - это градостроительная симуляция, 
 - ✅ **Счетчик рабочих:** Отображение свободных/всего рабочих в верхней панели
 - ✅ **Pathfinding через EasyStar.js:** Рабочие обходят здания по оптимальному пути
 - ✅ **Визуализация пути:** Полупрозрачные линии показывают маршрут рабочего
-- ✅ **State machine для рабочих:** 4 состояния (IDLE, PRODUCING, CARRYING, RETURNING)
+- ✅ **State machine для рабочих:** 5 состояний (IDLE, PRODUCING, CARRYING, WAITING_FOR_STORAGE, RETURNING)
 - ✅ **Автоматическое назначение:** Рабочие привязываются к новым зданиям автоматически
 - ✅ **Управление скоростью игры:** x1, x2, x3, x5, x7 (влияет на производство и движение)
 - ✅ **Фиксированный UI:** Панели ресурсов и строительства прикреплены к краям экрана
+- ✅ **Система вместимости склада:** 200 единиц (4 клетки по 50), визуализация заполненности
+- ✅ **Умное управление переполнением:** Рабочие ждут около склада, когда он заполнен
 
 ### Стартовая сцена
 - **Замок 3x3** по центру карты (100:100)
@@ -38,7 +40,7 @@ Village Builder - это градостроительная симуляция, 
 
 ### Здания
 - **Замок** (3x3) - центр деревни, коричневый, квадратный
-- **Склад** (2x2) - хранилище ресурсов, темно-коричневый, квадратный
+- **Склад** (2x2) - хранилище ресурсов, темно-коричневый, квадратный. Вместимость: 200 единиц (4 клетки по 50). Желтые квадраты растут снизу вверх, показывая заполненность каждой клетки
 - **Очаг** (1x1) - место появления рабочих, красный, круглый
 - **Теплица** (3x1) - производит помидоры за 2 секунды, цвет помидора (красный)
 - **Грядка** (2x1) - производит морковь за 5 секунд, оранжевый
@@ -67,7 +69,7 @@ src/
 │   ├── Worker.js              # Рабочий с state machine
 │   └── buildings/             # Конкретные типы зданий
 │       ├── Castle.js          # Обычное здание
-│       ├── Storage.js         # Обычное здание
+│       ├── Storage.js         # Склад с системой вместимости (200 единиц)
 │       ├── Campfire.js        # Обычное здание (круглое)
 │       ├── Greenhouse.js      # Производственное здание
 │       └── GardenBed.js       # Производственное здание
@@ -599,6 +601,74 @@ this.graphics.fillCircle(center.x, center.y, radius);
 
 **Файл:** `src/entities/buildings/Campfire.js`
 
+#### Storage - Склад с системой вместимости
+
+**Назначение:**
+Здание для хранения ресурсов с ограниченной вместимостью. Визуализирует заполненность через желтые квадраты в каждой клетке.
+
+**Характеристики:**
+- Размер: 2x2 клетки
+- Цвет: Темно-коричневый (0x654321)
+- Вместимость: 200 единиц (4 клетки по 50 единиц)
+- Форма: Прямоугольник
+
+**Система вместимости:**
+```javascript
+this.maxCapacity = 200;              // Максимальная вместимость склада
+this.cellCapacity = 50;              // Вместимость одной клетки (200 / 4 = 50)
+this.currentAmount = 0;              // Текущее количество ресурсов
+```
+
+**Ключевые методы:**
+
+1. `hasSpace()`
+   - **Возвращает:** `true` если есть место (currentAmount < 200)
+   - **Использование:** Worker проверяет перед доставкой ресурса
+
+2. `getAvailableSpace()`
+   - **Возвращает:** Количество свободных мест (200 - currentAmount)
+
+3. `receiveResource(resourceType)`
+   - **Проверяет** наличие места через `hasSpace()`
+   - **Если места нет:** возвращает `false`, рабочий переходит в WAITING_FOR_STORAGE
+   - **Если есть место:**
+     - Увеличивает `currentAmount++`
+     - Добавляет ресурс в ResourceManager
+     - Обновляет визуализацию `updateVisuals()`
+     - Возвращает `true`
+
+4. `updateVisuals()`
+   - **Визуализирует заполненность** каждой из 4 клеток
+   - **Порядок заполнения:**
+     1. Левая верхняя (0-50)
+     2. Правая верхняя (50-100)
+     3. Левая нижняя (100-150)
+     4. Правая нижняя (150-200)
+   - **Направление:** Желтые квадраты растут снизу вверх (как жидкость наливается)
+   - **Цвет заливки:** Золотой с прозрачностью (0xFFD700, alpha 0.6)
+   - **Формула заполнения клетки:**
+   ```javascript
+   const cellAmount = Math.max(0, Math.min(50, currentAmount - cellIndex * 50));
+   const fillRatio = cellAmount / 50;  // 0.0 - 1.0
+   const fillSize = CELL_SIZE * fillRatio;
+
+   // Рисуем снизу вверх
+   const cellY = startY + cell.y * CELL_SIZE + (CELL_SIZE - fillSize);
+   graphics.fillRect(cellX, cellY, CELL_SIZE, fillSize);
+   ```
+
+**Взаимодействие с Worker:**
+- Worker прибывает → вызывает `storage.hasSpace()`
+- Если `true` → доставляет ресурс → возвращается в здание
+- Если `false` → переходит в состояние WAITING_FOR_STORAGE
+- В WAITING_FOR_STORAGE каждый кадр проверяет `hasSpace()`
+- Как только место появляется → доставляет и идёт обратно
+
+**Визуальный эффект:**
+При заполнении склада игрок видит, как желтые квадраты постепенно растут в каждой клетке склада, давая визуальную обратную связь о заполненности хранилища.
+
+**Файл:** `src/entities/buildings/Storage.js`
+
 #### BuildingGhost - Призрак здания при размещении
 
 **Назначение:**
@@ -775,7 +845,7 @@ this.graphics = Graphics();       // Визуализация рабочего
 this.pathGraphics = Graphics();   // Визуализация пути
 ```
 
-**State Machine - 4 состояния:**
+**State Machine - 5 состояний:**
 
 ### 1. IDLE (свободен)
 **Вход:** При создании worker или если потерял здание
@@ -801,13 +871,36 @@ this.pathGraphics = Graphics();   // Визуализация пути
 - В `update()`: следует по пути через `followPath(deltaTime)`
 - При прибытии (`onPathComplete()`):
   ```javascript
-  storage.receiveResource(this.carryingResource);
-  this.carryingResource = null;
-  this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
+  // Проверяем, есть ли место на складе
+  if (storage.hasSpace()) {
+      storage.receiveResource(this.carryingResource);
+      this.carryingResource = null;
+      this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
+  } else {
+      // Склад полон - ждем
+      this.changeState(CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE);
+  }
   ```
-**Выход:** Прибыл на склад → RETURNING_TO_BUILDING
+**Выход:**
+- Есть место → RETURNING_TO_BUILDING
+- Склад полон → WAITING_FOR_STORAGE
 
-### 4. RETURNING_TO_BUILDING (возврат)
+### 4. WAITING_FOR_STORAGE (ожидание места на складе)
+**Вход:** Прибыл на склад, но он заполнен (200/200)
+**Что делает:**
+- Стоит около склада с ресурсом в руках (желтая точка над рабочим)
+- Каждый кадр в `update()` проверяет `storage.hasSpace()`
+- Когда появляется место:
+  ```javascript
+  const success = storage.receiveResource(this.carryingResource);
+  if (success) {
+      this.carryingResource = null;
+      this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
+  }
+  ```
+**Выход:** Появилось место → RETURNING_TO_BUILDING
+
+### 5. RETURNING_TO_BUILDING (возврат)
 **Вход:** Доставил ресурс на склад
 **Что делает:**
 - При входе: запрашивает путь к зданию через `moveToBuilding()`
@@ -817,25 +910,33 @@ this.pathGraphics = Graphics();   // Визуализация пути
 
 **Диаграмма состояний:**
 ```
-    ┌─────────────────────────────────────────┐
-    │                                         │
-    ▼                                         │
- [IDLE]                                       │
-    │                                         │
-    │ assignToBuilding()                      │
-    ▼                                         │
- [PRODUCING] ─────────────┐                   │
-    ▲                     │                   │
-    │                     │ resource ready    │
-    │                     ▼                   │
-    │              [CARRYING_TO_STORAGE]      │
-    │                     │                   │
-    │                     │ arrived at        │
-    │                     │ storage           │
-    │                     ▼                   │
-    │              [RETURNING_TO_BUILDING] ───┘
-    │                     │
-    └─────────────────────┘
+    ┌──────────────────────────────────────────────┐
+    │                                              │
+    ▼                                              │
+ [IDLE]                                            │
+    │                                              │
+    │ assignToBuilding()                           │
+    ▼                                              │
+ [PRODUCING] ──────────────┐                       │
+    ▲                      │                       │
+    │                      │ resource ready        │
+    │                      ▼                       │
+    │               [CARRYING_TO_STORAGE]          │
+    │                      │                       │
+    │                      │ arrived at storage    │
+    │           ┌──────────┴──────────┐            │
+    │           │                     │            │
+    │     has space?              no space         │
+    │           │                     │            │
+    │          yes                    ▼            │
+    │           │            [WAITING_FOR_STORAGE] │
+    │           │                     │            │
+    │           │              space available     │
+    │           └──────────┬──────────┘            │
+    │                      ▼                       │
+    │               [RETURNING_TO_BUILDING] ───────┘
+    │                      │
+    └──────────────────────┘
          arrived at building
 ```
 
