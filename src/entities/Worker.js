@@ -1,4 +1,5 @@
 import { CONSTANTS } from '../config/Constants.js';
+import { WorkerStateMachine } from '../core/WorkerStateMachine.js';
 export class Worker {
     constructor(scene, x, y) {
         this.scene = scene;
@@ -6,8 +7,15 @@ export class Worker {
         this.x = x;
         this.y = y;
 
-        // State machine
-        this.state = CONSTANTS.WORKER_STATES.IDLE;
+        this.stateMachine = new WorkerStateMachine({
+            goToBuilding: () => this.moveToBuilding(),
+            startProduction: () => this.startProduction(),
+            collectAndGoToStorage: () => this.collectAndGoToStorage(),
+            deliverResource: () => this.deliverResource(),
+            storageHasSpace: () => this.hasStorageSpace()
+        });
+
+        this.state = this.stateMachine.getState();
         this.assignedBuilding = null;
         this.carryingResource = null;
         this.currentPath = null;
@@ -62,40 +70,13 @@ export class Worker {
     assignToBuilding(building) {
         this.assignedBuilding = building;
         building.assignWorker(this);
-        this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
-    }
-
-    changeState(newState) {
-        this.state = newState;
-
-        switch (newState) {
-            case CONSTANTS.WORKER_STATES.IDLE:
-                this.currentPath = null;
-                break;
-
-            case CONSTANTS.WORKER_STATES.PRODUCING:
-                this.currentPath = null;
-                if (this.assignedBuilding && this.assignedBuilding.startProduction) {
-                    this.assignedBuilding.startProduction();
-                }
-                break;
-
-            case CONSTANTS.WORKER_STATES.CARRYING_TO_STORAGE:
-                this.moveToStorage();
-                break;
-
-            case CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE:
-                // Стоит и ждет освобождения места на складе
-                this.currentPath = null;
-                break;
-
-            case CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING:
-                this.moveToBuilding();
-                break;
-        }
+        this.stateMachine.send({ type: 'ASSIGN' });
+        this.state = this.stateMachine.getState();
     }
 
     moveToStorage() {
+        this.currentPath = null;
+        this.currentPathIndex = 0;
         const storage = this.services.buildingManager.getStorage();
         if (storage) {
             this.services.pathfindingManager.findPathToBuilding(
@@ -113,6 +94,8 @@ export class Worker {
     }
 
     moveToBuilding() {
+        this.currentPath = null;
+        this.currentPathIndex = 0;
         if (this.assignedBuilding) {
             this.services.pathfindingManager.findPathToBuilding(
                 this.x,
@@ -129,46 +112,37 @@ export class Worker {
     }
 
     update(deltaTime) {
-        switch (this.state) {
-            case CONSTANTS.WORKER_STATES.IDLE:
-                // Do nothing
-                break;
+        this.state = this.stateMachine.getState();
 
-            case CONSTANTS.WORKER_STATES.PRODUCING:
-                // Check if resource is ready
-                if (this.assignedBuilding && this.assignedBuilding.hasResourceReady) {
-                    if (this.assignedBuilding.hasResourceReady()) {
-                        // Collect resource
-                        this.carryingResource = this.assignedBuilding.collectResource();
-                        this.changeState(CONSTANTS.WORKER_STATES.CARRYING_TO_STORAGE);
-                    }
-                }
-                break;
+        if (this.state === CONSTANTS.WORKER_STATES.PRODUCING) {
+            if (this.assignedBuilding?.hasResourceReady?.()) {
+                this.stateMachine.send({ type: 'RESOURCE_READY' });
+                this.state = this.stateMachine.getState();
+            }
+        }
 
-            case CONSTANTS.WORKER_STATES.CARRYING_TO_STORAGE:
-            case CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING:
-                this.followPath(deltaTime);
-                break;
+        if (this.state === CONSTANTS.WORKER_STATES.CARRYING_TO_STORAGE ||
+            this.state === CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING) {
+            this.followPath(deltaTime);
+        }
 
-            case CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE:
-                // Периодически проверяем, появилось ли место на складе
-                const storage = this.services.buildingManager.getStorage();
-                if (storage && storage.hasSpace()) {
-                    // Место появилось! Доставляем ресурс
-                    const success = storage.receiveResource(this.carryingResource);
-                    if (success) {
-                        this.carryingResource = null;
-                        this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
-                    }
-                }
-                break;
+        if (this.state === CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE) {
+            const storage = this.services.buildingManager.getStorage();
+            if (storage && storage.hasSpace()) {
+                this.stateMachine.send({ type: 'STORAGE_SPACE' });
+                this.state = this.stateMachine.getState();
+            }
         }
 
         this.updateGraphics();
     }
 
     followPath(deltaTime) {
-        if (!this.currentPath || this.currentPath.length === 0) {
+        // Wait for path to be resolved; don't trigger completion early
+        if (!this.currentPath) {
+            return;
+        }
+        if (this.currentPath.length === 0) {
             this.onPathComplete();
             return;
         }
@@ -200,28 +174,8 @@ export class Worker {
         this.currentPath = null;
         this.currentPathIndex = 0;
 
-        if (this.state === CONSTANTS.WORKER_STATES.CARRYING_TO_STORAGE) {
-            // Arrived at storage
-            const storage = this.services.buildingManager.getStorage();
-            if (storage && this.carryingResource) {
-                // Проверяем, есть ли место на складе
-                if (storage.hasSpace()) {
-                    // Есть место - доставляем
-                    const success = storage.receiveResource(this.carryingResource);
-                    if (success) {
-                        this.carryingResource = null;
-                        this.changeState(CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING);
-                    }
-                } else {
-                    // Склад полон - ждем
-                    this.changeState(CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE);
-                }
-            }
-
-        } else if (this.state === CONSTANTS.WORKER_STATES.RETURNING_TO_BUILDING) {
-            // Arrived at building, start producing
-            this.changeState(CONSTANTS.WORKER_STATES.PRODUCING);
-        }
+        this.stateMachine.send({ type: 'ARRIVED' });
+        this.state = this.stateMachine.getState();
     }
 
     isIdle() {
@@ -231,5 +185,34 @@ export class Worker {
     destroy() {
         this.graphics.destroy();
         this.pathGraphics.destroy();
+    }
+
+    startProduction() {
+        this.currentPath = null;
+        if (this.assignedBuilding?.startProduction) {
+            this.assignedBuilding.startProduction();
+        }
+    }
+
+    collectAndGoToStorage() {
+        if (this.assignedBuilding?.collectResource) {
+            this.carryingResource = this.assignedBuilding.collectResource();
+        }
+        this.moveToStorage();
+    }
+
+    deliverResource() {
+        const storage = this.services.buildingManager.getStorage();
+        if (storage && this.carryingResource) {
+            const success = storage.receiveResource(this.carryingResource);
+            if (success) {
+                this.carryingResource = null;
+            }
+        }
+    }
+
+    hasStorageSpace() {
+        const storage = this.services.buildingManager.getStorage();
+        return storage ? storage.hasSpace() : false;
     }
 }
