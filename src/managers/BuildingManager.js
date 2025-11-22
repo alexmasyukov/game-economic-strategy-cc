@@ -1,4 +1,9 @@
 import { CONSTANTS } from '../config/Constants.js';
+import { Castle } from '../entities/buildings/Castle.js';
+import { Storage } from '../entities/buildings/Storage.js';
+import { Campfire } from '../entities/buildings/Campfire.js';
+import { Greenhouse } from '../entities/buildings/Greenhouse.js';
+import { GardenBed } from '../entities/buildings/GardenBed.js';
 export class BuildingManager {
     constructor(scene) {
         this.scene = scene;
@@ -51,10 +56,10 @@ export class BuildingManager {
         this.addBuilding(greenhouse);
 
         // Auto-assign a free worker
-        this.scene.workerManager.assignWorkerToBuilding(greenhouse);
+        this.scene.services.workerManager.assignWorkerToBuilding(greenhouse);
 
         // Update UI worker count
-        this.scene.uiManager.updateWorkerCount();
+        this.scene.services.uiManager.updateWorkerCount();
 
         return greenhouse;
     }
@@ -64,10 +69,10 @@ export class BuildingManager {
         this.addBuilding(gardenBed);
 
         // Auto-assign a free worker
-        this.scene.workerManager.assignWorkerToBuilding(gardenBed);
+        this.scene.services.workerManager.assignWorkerToBuilding(gardenBed);
 
         // Update UI worker count
-        this.scene.uiManager.updateWorkerCount();
+        this.scene.services.uiManager.updateWorkerCount();
 
         return gardenBed;
     }

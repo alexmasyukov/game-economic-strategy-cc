@@ -1,3 +1,5 @@
+import EasyStar from 'easystarjs';
+
 export class PathfindingManager {
     constructor(gridManager) {
         this.gridManager = gridManager;

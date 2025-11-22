@@ -39,7 +39,7 @@ export class Storage extends Building {
         }
 
         this.currentAmount++;
-        this.scene.resourceManager.addResource(resourceType, 1);
+        this.scene.services.resourceManager.addResource(resourceType, 1);
         this.updateVisuals();
         return true;
     }
@@ -48,7 +48,7 @@ export class Storage extends Building {
         this.fillGraphics.clear();
 
         // Определяем позицию склада в мире
-        const topLeftWorld = this.scene.gridManager.gridToWorld(this.gridX, this.gridY);
+        const topLeftWorld = this.scene.services.gridManager.gridToWorld(this.gridX, this.gridY);
         const startX = topLeftWorld.x - CONSTANTS.CELL_SIZE / 2;
         const startY = topLeftWorld.y - CONSTANTS.CELL_SIZE / 2;
 

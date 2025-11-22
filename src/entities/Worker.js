@@ -2,6 +2,7 @@ import { CONSTANTS } from '../config/Constants.js';
 export class Worker {
     constructor(scene, x, y) {
         this.scene = scene;
+        this.services = scene.services;
         this.x = x;
         this.y = y;
 
@@ -95,9 +96,9 @@ export class Worker {
     }
 
     moveToStorage() {
-        const storage = this.scene.buildingManager.getStorage();
+        const storage = this.services.buildingManager.getStorage();
         if (storage) {
-            this.scene.pathfindingManager.findPathToBuilding(
+            this.services.pathfindingManager.findPathToBuilding(
                 this.x,
                 this.y,
                 storage,
@@ -113,7 +114,7 @@ export class Worker {
 
     moveToBuilding() {
         if (this.assignedBuilding) {
-            this.scene.pathfindingManager.findPathToBuilding(
+            this.services.pathfindingManager.findPathToBuilding(
                 this.x,
                 this.y,
                 this.assignedBuilding,
@@ -151,7 +152,7 @@ export class Worker {
 
             case CONSTANTS.WORKER_STATES.WAITING_FOR_STORAGE:
                 // Периодически проверяем, появилось ли место на складе
-                const storage = this.scene.buildingManager.getStorage();
+                const storage = this.services.buildingManager.getStorage();
                 if (storage && storage.hasSpace()) {
                     // Место появилось! Доставляем ресурс
                     const success = storage.receiveResource(this.carryingResource);
@@ -201,7 +202,7 @@ export class Worker {
 
         if (this.state === CONSTANTS.WORKER_STATES.CARRYING_TO_STORAGE) {
             // Arrived at storage
-            const storage = this.scene.buildingManager.getStorage();
+            const storage = this.services.buildingManager.getStorage();
             if (storage && this.carryingResource) {
                 // Проверяем, есть ли место на складе
                 if (storage.hasSpace()) {

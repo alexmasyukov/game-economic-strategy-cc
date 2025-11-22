@@ -22,12 +22,12 @@ export class BuildingGhost {
 
     updatePosition(worldX, worldY) {
         // Convert world coordinates to grid
-        const gridPos = this.scene.gridManager.worldToGrid(worldX, worldY);
+        const gridPos = this.scene.services.gridManager.worldToGrid(worldX, worldY);
         this.gridX = gridPos.x;
         this.gridY = gridPos.y;
 
         // Check if area is free
-        this.isValid = this.scene.gridManager.isAreaFree(
+        this.isValid = this.scene.services.gridManager.isAreaFree(
             this.gridX,
             this.gridY,
             this.width,
@@ -35,7 +35,7 @@ export class BuildingGhost {
         );
 
         // Get world position for top-left corner
-        const topLeftWorld = this.scene.gridManager.gridToWorld(this.gridX, this.gridY);
+        const topLeftWorld = this.scene.services.gridManager.gridToWorld(this.gridX, this.gridY);
 
         // Update graphics
         this.graphics.clear();

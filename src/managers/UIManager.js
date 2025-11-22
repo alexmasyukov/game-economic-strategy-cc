@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { CONSTANTS } from '../config/Constants.js';
 export class UIManager {
     constructor(scene) {
@@ -10,7 +11,7 @@ export class UIManager {
         this.createSpeedControls();
 
         // Subscribe to resource changes
-        this.scene.resourceManager.onResourceChange(() => {
+        this.scene.services.resourceManager.onResourceChange(() => {
             this.updateResourceDisplay();
         });
 
@@ -224,7 +225,7 @@ export class UIManager {
     }
 
     updateResourceDisplay() {
-        const resources = this.scene.resourceManager.getAllResources();
+        const resources = this.scene.services.resourceManager.getAllResources();
         let text = '';
 
         Object.keys(resources).forEach((resourceType, index) => {
@@ -243,15 +244,15 @@ export class UIManager {
     }
 
     updateWorkerCount() {
-        const freeWorkers = this.scene.workerManager.getFreeWorkersCount();
-        const totalWorkers = this.scene.workerManager.getWorkers().length;
+        const freeWorkers = this.scene.services.workerManager.getFreeWorkersCount();
+        const totalWorkers = this.scene.services.workerManager.getWorkers().length;
 
         this.workerCountText.setText(`Рабочие: ${freeWorkers}/${totalWorkers} свободно`);
     }
 
     onBuildButtonClick(buildingType) {
         // Start placement mode instead of auto-placing
-        this.scene.placementManager.startPlacement(buildingType);
+        this.scene.services.placementManager.startPlacement(buildingType);
 
         // Update worker count after building placement
         this.updateWorkerCount();

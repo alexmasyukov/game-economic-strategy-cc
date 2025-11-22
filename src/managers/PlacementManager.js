@@ -1,4 +1,5 @@
 import { CONSTANTS } from '../config/Constants.js';
+import { BuildingGhost } from '../entities/BuildingGhost.js';
 export class PlacementManager {
     constructor(scene) {
         this.scene = scene;
@@ -73,10 +74,10 @@ export class PlacementManager {
         // Create the building
         switch (this.currentBuildingType) {
             case CONSTANTS.BUILDING_TYPES.GREENHOUSE:
-                this.scene.buildingManager.createGreenhouse(gridPos.x, gridPos.y);
+                this.scene.services.buildingManager.createGreenhouse(gridPos.x, gridPos.y);
                 break;
             case CONSTANTS.BUILDING_TYPES.GARDEN_BED:
-                this.scene.buildingManager.createGardenBed(gridPos.x, gridPos.y);
+                this.scene.services.buildingManager.createGardenBed(gridPos.x, gridPos.y);
                 break;
             // Add other building types here
         }

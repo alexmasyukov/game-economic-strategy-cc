@@ -18,10 +18,10 @@ export class Building {
         this.type = config.type;        // Тип здания
 
         // Occupy grid cells FIRST
-        this.scene.gridManager.occupyArea(gridX, gridY, this.width, this.height);
+        this.scene.services.gridManager.occupyArea(gridX, gridY, this.width, this.height);
 
         // Get top-left corner in world coordinates
-        const topLeftWorld = this.scene.gridManager.gridToWorld(gridX, gridY);
+        const topLeftWorld = this.scene.services.gridManager.gridToWorld(gridX, gridY);
 
         // Create visual representation (rectangle)
         this.graphics = this.scene.add.graphics();
@@ -38,11 +38,11 @@ export class Building {
         this.graphics.y = topLeftWorld.y - CONSTANTS.CELL_SIZE / 2;
 
         // Update pathfinding grid
-        this.scene.pathfindingManager.updateGrid();
+        this.scene.services.pathfindingManager.updateGrid();
     }
 
     getCenter() {
-        const worldPos = this.scene.gridManager.gridToWorld(
+        const worldPos = this.scene.services.gridManager.gridToWorld(
             this.gridX + Math.floor(this.width / 2),
             this.gridY + Math.floor(this.height / 2)
         );
@@ -55,8 +55,8 @@ export class Building {
 
     destroy() {
         this.graphics.destroy();
-        this.scene.gridManager.freeArea(this.gridX, this.gridY, this.width, this.height);
-        this.scene.pathfindingManager.updateGrid();
+        this.scene.services.gridManager.freeArea(this.gridX, this.gridY, this.width, this.height);
+        this.scene.services.pathfindingManager.updateGrid();
     }
 
     update(deltaTime) {

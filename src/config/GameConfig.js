@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { CONSTANTS } from './Constants.js';
 
 export const gameConfig = {

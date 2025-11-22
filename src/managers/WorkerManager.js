@@ -1,3 +1,5 @@
+import { Worker } from '../entities/Worker.js';
+
 export class WorkerManager {
     constructor(scene) {
         this.scene = scene;
