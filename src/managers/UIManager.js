@@ -1,14 +1,20 @@
 import Phaser from 'phaser';
 import { CONSTANTS } from '../config/Constants.js';
+import { GAME_STATES } from '../core/GameStateMachine.js';
 export class UIManager {
     constructor(scene) {
         this.scene = scene;
         this.gameSpeed = 1;
         this.speedButtons = [];
+        this.utilityButtons = [];
+        this.menuOverlay = null;
+        this.menuPanel = null;
+        this.menuText = null;
+        this.menuPaused = false;
 
         this.createTopBar();
         this.createBottomBar();
-        this.createSpeedControls();
+        this.createSpeedControlsAndUtilities();
 
         // Subscribe to resource changes
         this.scene.services.resourceManager.onResourceChange(() => {
@@ -24,10 +30,11 @@ export class UIManager {
         this.destroyUI();
         this.createTopBar();
         this.createBottomBar();
-        this.createSpeedControls();
+        this.createSpeedControlsAndUtilities();
         this.updateResourceDisplay();
         this.updateWorkerCount();
         this.updateSpeedButtons();
+        this.updatePauseButton();
     }
 
     destroyUI() {
@@ -35,12 +42,19 @@ export class UIManager {
         if (this.resourceText) this.resourceText.destroy();
         if (this.workerCountText) this.workerCountText.destroy();
         if (this.bottomBarBg) this.bottomBarBg.destroy();
+        this.destroyMenuOverlay();
 
         this.speedButtons.forEach(btn => {
             if (btn.buttonBg) btn.buttonBg.destroy();
             if (btn.text) btn.text.destroy();
         });
         this.speedButtons = [];
+
+        this.utilityButtons.forEach(btn => {
+            if (btn.buttonBg) btn.buttonBg.destroy();
+            if (btn.text) btn.text.destroy();
+        });
+        this.utilityButtons = [];
     }
 
     createTopBar() {
@@ -74,6 +88,7 @@ export class UIManager {
 
         this.updateResourceDisplay();
         this.updateWorkerCount();
+        this.updatePauseButton();
     }
 
     createBottomBar() {
@@ -145,14 +160,31 @@ export class UIManager {
         });
     }
 
-    createSpeedControls() {
+    createSpeedControlsAndUtilities() {
         const width = this.scene.scale.width;
-        const startX = width - 250;
         const y = 5;
+        const buttonWidth = 60;
+        const spacing = 5;
 
+        // Place utility buttons first (Menu, Pause)
+        let startX = width - (buttonWidth * 2 + spacing * 3 + 45 * CONSTANTS.GAME_SPEEDS.length);
+
+        const menuButton = this.createUtilityButton(startX, y, 'Menu', () => this.toggleMenu());
+        this.utilityButtons.push(menuButton);
+
+        const pauseButton = this.createUtilityButton(
+            startX + buttonWidth + spacing,
+            y,
+            'Pause',
+            () => this.togglePause()
+        );
+        this.utilityButtons.push(pauseButton);
+
+        // Speed buttons
+        const speedStartX = startX + (buttonWidth + spacing) * 2 + spacing;
         CONSTANTS.GAME_SPEEDS.forEach((speed, index) => {
             const button = this.createSpeedButton(
-                startX + index * 45,
+                speedStartX + index * 45,
                 y,
                 `x${speed}`,
                 speed
@@ -161,6 +193,42 @@ export class UIManager {
         });
 
         this.updateSpeedButtons();
+        this.updatePauseButton();
+    }
+
+    createUtilityButton(x, y, label, onClick) {
+        const buttonBg = this.scene.add.graphics();
+        buttonBg.fillStyle(CONSTANTS.COLORS.BUTTON_NORMAL, 1);
+        buttonBg.fillRect(x, y, 60, 30);
+        buttonBg.setDepth(1001);
+        buttonBg.setScrollFactor(0);
+        buttonBg.setInteractive(
+            new Phaser.Geom.Rectangle(x, y, 60, 30),
+            Phaser.Geom.Rectangle.Contains
+        );
+
+        const text = this.scene.add.text(x + 30, y + 15, label, {
+            fontSize: '14px',
+            color: '#ffffff',
+            fontFamily: 'Arial'
+        });
+        text.setOrigin(0.5);
+        text.setDepth(1002);
+        text.setScrollFactor(0);
+
+        buttonBg.on('pointerdown', onClick);
+        buttonBg.on('pointerover', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(CONSTANTS.COLORS.BUTTON_HOVER, 1);
+            buttonBg.fillRect(x, y, 60, 30);
+        });
+        buttonBg.on('pointerout', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(CONSTANTS.COLORS.BUTTON_NORMAL, 1);
+            buttonBg.fillRect(x, y, 60, 30);
+        });
+
+        return { buttonBg, text, x, y };
     }
 
     createSpeedButton(x, y, label, speed) {
@@ -224,6 +292,19 @@ export class UIManager {
         });
     }
 
+    updatePauseButton() {
+        const isPaused = this.scene.gameStateMachine?.getState() === GAME_STATES.PAUSED;
+        const pauseBtn = this.utilityButtons[1];
+        if (!pauseBtn) return;
+        pauseBtn.buttonBg.clear();
+        pauseBtn.buttonBg.fillStyle(
+            isPaused ? CONSTANTS.COLORS.BUTTON_ACTIVE : CONSTANTS.COLORS.BUTTON_NORMAL,
+            1
+        );
+        pauseBtn.buttonBg.fillRect(pauseBtn.x, pauseBtn.y, 60, 30);
+        pauseBtn.text.setText(isPaused ? 'Resume' : 'Pause');
+    }
+
     updateResourceDisplay() {
         const resources = this.scene.services.resourceManager.getAllResources();
         let text = '';
@@ -256,5 +337,99 @@ export class UIManager {
 
         // Update worker count after building placement
         this.updateWorkerCount();
+    }
+
+    togglePause() {
+        if (!this.scene.gameStateMachine) return;
+        const state = this.scene.gameStateMachine.getState();
+        if (state === GAME_STATES.PAUSED) {
+            this.scene.gameStateMachine.send({ type: 'RESUME' });
+        } else if (state === GAME_STATES.PLAYING) {
+            this.scene.gameStateMachine.send({ type: 'PAUSE' });
+        }
+        this.updatePauseButton();
+    }
+
+    toggleMenu() {
+        if (this.menuOverlay) {
+            this.closeMenu();
+        } else {
+            this.openMenu();
+        }
+    }
+
+    openMenu() {
+        const width = this.scene.scale.width;
+        const height = this.scene.scale.height;
+
+        this.menuOverlay = this.scene.add.graphics();
+        this.menuOverlay.fillStyle(0x000000, 0.5);
+        this.menuOverlay.fillRect(0, 0, width, height);
+        this.menuOverlay.setScrollFactor(0);
+        this.menuOverlay.setDepth(2000);
+        this.menuOverlay.setInteractive(
+            new Phaser.Geom.Rectangle(0, 0, width, height),
+            Phaser.Geom.Rectangle.Contains
+        );
+
+        const panelWidth = 300;
+        const panelHeight = 180;
+        const panelX = (width - panelWidth) / 2;
+        const panelY = (height - panelHeight) / 2;
+
+        this.menuPanel = this.scene.add.graphics();
+        this.menuPanel.fillStyle(CONSTANTS.COLORS.UI_BG, 1);
+        this.menuPanel.fillRect(panelX, panelY, panelWidth, panelHeight);
+        this.menuPanel.lineStyle(2, CONSTANTS.COLORS.BUTTON_ACTIVE, 1);
+        this.menuPanel.strokeRect(panelX, panelY, panelWidth, panelHeight);
+        this.menuPanel.setScrollFactor(0);
+        this.menuPanel.setDepth(2001);
+
+        this.menuText = this.scene.add.text(panelX + panelWidth / 2, panelY + 30, 'Меню', {
+            fontSize: '18px',
+            color: '#ffffff',
+            fontFamily: 'Arial'
+        });
+        this.menuText.setOrigin(0.5);
+        this.menuText.setScrollFactor(0);
+        this.menuText.setDepth(2002);
+
+        // Close button
+        const closeBtn = this.createUtilityButton(panelX + panelWidth / 2 - 30, panelY + panelHeight - 50, 'Close', () => this.closeMenu());
+        closeBtn.buttonBg.setDepth(2002);
+        closeBtn.text.setDepth(2003);
+        this.menuCloseButton = closeBtn;
+
+        // Pause while menu open
+        if (this.scene.gameStateMachine?.getState() === GAME_STATES.PLAYING) {
+            this.menuPaused = true;
+            this.scene.gameStateMachine.send({ type: 'PAUSE' });
+            this.updatePauseButton();
+        } else {
+            this.menuPaused = false;
+        }
+    }
+
+    closeMenu() {
+        this.destroyMenuOverlay();
+        if (this.menuPaused && this.scene.gameStateMachine?.getState() === GAME_STATES.PAUSED) {
+            this.scene.gameStateMachine.send({ type: 'RESUME' });
+            this.updatePauseButton();
+        }
+        this.menuPaused = false;
+    }
+
+    destroyMenuOverlay() {
+        if (this.menuOverlay) this.menuOverlay.destroy();
+        if (this.menuPanel) this.menuPanel.destroy();
+        if (this.menuText) this.menuText.destroy();
+        if (this.menuCloseButton) {
+            if (this.menuCloseButton.buttonBg) this.menuCloseButton.buttonBg.destroy();
+            if (this.menuCloseButton.text) this.menuCloseButton.text.destroy();
+        }
+        this.menuOverlay = null;
+        this.menuPanel = null;
+        this.menuText = null;
+        this.menuCloseButton = null;
     }
 }
