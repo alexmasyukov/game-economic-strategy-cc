@@ -24,10 +24,13 @@ src/
 - **BuildingManager** — создание/хранение зданий, auto-assign свободного рабочего на продздания.
 - **WorkerManager** — создание/список рабочих.
 - **PlacementManager** — режим постройки, призрак, валидация.
-- **UIManager** — верхняя панель ресурсов/скоростей, нижние кнопки построек, обновления через Resource/Worker.
+- **UIManager** — верхняя панель ресурсов/скоростей, кнопки паузы и меню с оверлеем, нижние кнопки построек; обновления через Resource/Worker.
 
 ### Рабочие и FSM
 `Worker` использует чистую XState-машину `core/WorkerStateMachine` (состояния IDLE → RETURNING_TO_BUILDING → PRODUCING → CARRYING_TO_STORAGE → WAITING_FOR_STORAGE). Все сайд-эффекты (поиск пути, старт производства, доставка ресурса) инъектируются, поэтому FSM тестируется без Phaser.
+
+### Глобальная FSM
+`core/GameStateMachine` описывает состояния MENU → LOADING → PLAYING → PAUSED. `GameScene` инициирует START/LOADED, UI паузы/меню переключает PAUSE/RESUME.
 
 ### Здания
 - Castle, Storage (2x2, ёмкость 200, визуализация заполнения), Campfire (спавн), Greenhouse/GardenBed (производство ресурсов).
